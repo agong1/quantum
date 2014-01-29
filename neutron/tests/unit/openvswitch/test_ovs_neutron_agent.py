@@ -480,8 +480,7 @@ class TestOvsNeutronAgent(base.BaseTestCase):
                     klm_cmd.return_value = installed_klm_version
                     usr_cmd.return_value = installed_usr_version
                     self.agent.tunnel_types = 'vxlan'
-                    ovs_neutron_agent.check_ovs_version(min_vers,
-                                                        root_helper='sudo')
+                    self.agent._check_ovs_version()
                     version_ok = True
                 except SystemExit as e:
                     self.assertEqual(e.code, 1)

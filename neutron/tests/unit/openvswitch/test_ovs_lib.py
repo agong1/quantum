@@ -134,6 +134,37 @@ class OVS_Lib_Test(base.BaseTestCase):
         # test __str__
         str(port)
 
+    def test_set_controller(self):
+        controller_names = ['tcp:127.0.0.1:6633', 'tcp:172.17.16.10:5555']
+        self.br.set_controller(controller_names)
+        self.execute.assert_called_once_with(
+            ['ovs-vsctl', self.TO, '--', 'set-controller', self.BR_NAME,
+             'tcp:127.0.0.1:6633', 'tcp:172.17.16.10:5555'],
+            root_helper=self.root_helper)
+
+    def test_del_controller(self):
+        self.br.del_controller()
+        self.execute.assert_called_once_with(
+            ['ovs-vsctl', self.TO, '--', 'del-controller', self.BR_NAME],
+            root_helper=self.root_helper)
+
+    def test_get_controller(self):
+        self.execute.return_value = 'tcp:127.0.0.1:6633\ntcp:172.17.16.10:5555'
+        names = self.br.get_controller()
+        self.assertEqual(names,
+                         ['tcp:127.0.0.1:6633', 'tcp:172.17.16.10:5555'])
+        self.execute.assert_called_once_with(
+            ['ovs-vsctl', self.TO, '--', 'get-controller', self.BR_NAME],
+            root_helper=self.root_helper)
+
+    def test_set_protocols(self):
+        protocols = 'OpenFlow13'
+        self.br.set_protocols(protocols)
+        self.execute.assert_called_once_with(
+            ['ovs-vsctl', self.TO, '--', 'set', 'bridge', self.BR_NAME,
+             "protocols=%s" % protocols],
+            root_helper=self.root_helper)
+
     def test_create(self):
         self.br.add_bridge(self.BR_NAME)
 
@@ -654,3 +685,47 @@ class OVS_Lib_Test(base.BaseTestCase):
 
     def test_get_vif_by_port_id_with_no_data(self):
         self.assertIsNone(self._test_get_vif_port_by_id('whatever', []))
+
+    def _check_ovs_vxlan_version(self, installed_usr_version,
+                                 installed_klm_version, min_vers,
+                                 expecting_ok):
+        with mock.patch(
+                'neutron.agent.linux.ovs_lib.get_installed_ovs_klm_version'
+        ) as klm_cmd:
+            with mock.patch(
+                'neutron.agent.linux.ovs_lib.get_installed_ovs_usr_version'
+            ) as usr_cmd:
+                try:
+                    klm_cmd.return_value = installed_klm_version
+                    usr_cmd.return_value = installed_usr_version
+                    ovs_lib.check_ovs_vxlan_version(min_vers,
+                                                    root_helper='sudo')
+                    version_ok = True
+                except SystemError:
+                    version_ok = False
+            self.assertEqual(version_ok, expecting_ok)
+
+    def test_check_minimum_version(self):
+        self._check_ovs_vxlan_version('1.10', '1.10',
+                                      '1.10',
+                                      expecting_ok=True)
+
+    def test_check_future_version(self):
+        self._check_ovs_vxlan_version('1.11', '1.11',
+                                      '1.10',
+                                      expecting_ok=True)
+
+    def test_check_fail_version(self):
+        self._check_ovs_vxlan_version('1.9', '1.9',
+                                      '1.10',
+                                      expecting_ok=False)
+
+    def test_check_fail_no_version(self):
+        self._check_ovs_vxlan_version(None, None,
+                                      '1.10',
+                                      expecting_ok=False)
+
+    def test_check_fail_klm_version(self):
+        self._check_ovs_vxlan_version('1.10', '1.9',
+                                      '1.10',
+                                      expecting_ok=False)

@@ -18,6 +18,7 @@
 # @author: Dan Wendlandt, Nicira Networks, Inc.
 # @author: Dave Lapsley, Nicira Networks, Inc.
 
+import distutils.version as dist_version
 import re
 
 from oslo.config import cfg
@@ -110,6 +111,25 @@ class OVSBridge(BaseOVS):
         self.br_name = br_name
         self.defer_apply_flows = False
         self.deferred_flows = {'add': '', 'mod': '', 'del': ''}
+
+    def set_controller(self, controller_names):
+        vsctl_command = ['--', 'set-controller', self.br_name]
+        vsctl_command.extend(controller_names)
+        self.run_vsctl(vsctl_command, check_error=True)
+
+    def del_controller(self):
+        self.run_vsctl(['--', 'del-controller', self.br_name])
+
+    def get_controller(self):
+        res = self.run_vsctl(['--', 'get-controller', self.br_name])
+        if res:
+            return res.strip().split('\n')
+        return res
+
+    def set_protocols(self, protocols):
+        self.run_vsctl(['--', 'set', 'bridge', self.br_name,
+                        "protocols=%s" % protocols],
+                       check_error=True)
 
     def create(self):
         self.add_bridge(self.br_name)
@@ -399,7 +419,7 @@ class OVSBridge(BaseOVS):
             ofport = data[ofport_idx]
             # ofport must be integer otherwise return None
             if not isinstance(ofport, int) or ofport == -1:
-                LOG.warn(_("ofport: %(ofport)s for VIF: %(vif)s is not a"
+                LOG.warn(_("ofport: %(ofport)s for VIF: %(vif)s is not a "
                            "positive integer"), {'ofport': ofport,
                                                  'vif': port_id})
                 return
@@ -481,3 +501,39 @@ def get_bridge_external_bridge_id(root_helper, bridge):
     except Exception:
         LOG.exception(_("Bridge %s not found."), bridge)
         return None
+
+
+def _compare_installed_and_required_version(installed_version,
+                                            required_version, version_type):
+    if installed_version:
+        if dist_version.StrictVersion(
+                installed_version) < dist_version.StrictVersion(
+                required_version):
+            msg = (_('Failed %(type)s version check for Open '
+                     'vSwitch with VXLAN support. To use '
+                     'VXLAN tunnels with OVS, please ensure '
+                     'the OVS version is %(required)s or newer!') %
+                   {'type': version_type, 'required': required_version})
+            raise SystemError(msg)
+    else:
+        msg = (_('Unable to determine %(type)s version for Open '
+                 'vSwitch with VXLAN support. To use '
+                 'VXLAN tunnels with OVS, please ensure '
+                 'that the version is %(required)s or newer!') %
+               {'type': version_type, 'required': required_version})
+        raise SystemError(msg)
+
+
+def check_ovs_vxlan_version(min_required_version, root_helper):
+    installed_klm_version = get_installed_ovs_klm_version()
+    installed_usr_version = get_installed_ovs_usr_version(root_helper)
+    LOG.debug(_("Checking OVS version for VXLAN support "
+                "installed klm version is %s "), installed_klm_version)
+    LOG.debug(_("Checking OVS version for VXLAN support "
+                "installed usr version is %s"), installed_usr_version)
+    # First check the userspace version
+    _compare_installed_and_required_version(installed_usr_version,
+                                            min_required_version, 'userspace')
+    # Now check the kernel version
+    _compare_installed_and_required_version(installed_klm_version,
+                                            min_required_version, 'kernel')
