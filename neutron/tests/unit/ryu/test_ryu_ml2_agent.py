@@ -183,7 +183,7 @@ class TestRyuNeutronAgentOVSBridge(RyuAgentTestCase):
                     self.ovs.get_datapath(retry_max=2)
         self.assertEqual(mock_get_datapath.call_count, 2)
 
-    def test_setup_ofp(self):
+    def test_setup_ofp_default_par(self):
         with contextlib.nested(
             mock.patch.object(self.ovs, 'set_protocols'),
             mock.patch.object(self.ovs, 'set_controller'),
@@ -196,6 +196,23 @@ class TestRyuNeutronAgentOVSBridge(RyuAgentTestCase):
         mock_set_controller.assert_called_with(['tcp:127.0.0.1:6633'])
         mock_get_datapath.assert_called_with(
             cfg.CONF.AGENT.get_datapath_retry_times)
+        self.assertEqual(mock_find_datapath_id.call_count, 1)
+
+    def test_setup_ofp_specify_par(self):
+        controller_names = ['tcp:192.168.10.10:1234', 'tcp:172.17.16.20:5555']
+        with contextlib.nested(
+            mock.patch.object(self.ovs, 'set_protocols'),
+            mock.patch.object(self.ovs, 'set_controller'),
+            mock.patch.object(self.ovs, 'find_datapath_id'),
+            mock.patch.object(self.ovs, 'get_datapath'),
+        ) as (mock_set_protocols, mock_set_controller,
+              mock_find_datapath_id, mock_get_datapath):
+            self.ovs.setup_ofp(controller_names=controller_names,
+                               protocols='OpenFlow133',
+                               retry_max=11)
+        mock_set_protocols.assert_called_with('OpenFlow133')
+        mock_set_controller.assert_called_with(controller_names)
+        mock_get_datapath.assert_called_with(11)
         self.assertEqual(mock_find_datapath_id.call_count, 1)
 
     def test_setup_ofp_with_except(self):
