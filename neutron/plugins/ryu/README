@@ -6,6 +6,9 @@ This directory includes neutron plugin for Ryu Network Operating System.
 For how to install/set up this plugin with Ryu and OpenStack, please refer to
 https://github.com/osrg/ryu/wiki/OpenStack
 
+For how to install/set up ML2 mechanism driver for Ryu, please refer to
+https://github.com/osrg/ryu/wiki/OpenStack
+
 # -- Ryu General
 
 For general Ryu stuff, please refer to
