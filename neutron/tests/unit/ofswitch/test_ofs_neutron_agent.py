@@ -28,26 +28,26 @@ from neutron.common import constants as n_const
 from neutron.openstack.common import importutils
 from neutron.openstack.common.rpc import common as rpc_common
 from neutron.plugins.common import constants as p_const
-from neutron.plugins.ryu.common import constants
+from neutron.plugins.ofswitch.common import constants
 from neutron.tests import base
-from neutron.tests.unit.ryu import fake_ryu
+from neutron.tests.unit.ofswitch import fake_ryu
 
 
 NOTIFIER = ('neutron.plugins.ml2.rpc.AgentNotifierApi')
 
 
-class RyuAgentTestCase(base.BaseTestCase):
+class OFSAgentTestCase(base.BaseTestCase):
 
-    _AGENT_NAME = 'neutron.plugins.ryu.agent.ryu_ml2_agent'
+    _AGENT_NAME = 'neutron.plugins.ofswitch.agent.ofs_neutron_agent'
 
     def setUp(self):
-        super(RyuAgentTestCase, self).setUp()
+        super(OFSAgentTestCase, self).setUp()
         self.addCleanup(mock.patch.stopall)
-        self.fake_ryu_app = fake_ryu.patch_fake_ryu_of().start()
+        self.fake_ryu_of = fake_ryu.patch_fake_ryu_of().start()
         self.mod_agent = importutils.import_module(self._AGENT_NAME)
 
 
-class CreateAgentConfigMap(RyuAgentTestCase):
+class CreateAgentConfigMap(OFSAgentTestCase):
 
     def test_create_agent_config_map_succeeds(self):
         self.assertTrue(self.mod_agent.create_agent_config_map(cfg.CONF))
@@ -69,15 +69,15 @@ class CreateAgentConfigMap(RyuAgentTestCase):
         self.addCleanup(cfg.CONF.reset)
         # Verify setting only enable_tunneling will default tunnel_type to GRE
         cfg.CONF.set_override('tunnel_types', None, group='AGENT')
-        cfg.CONF.set_override('enable_tunneling', True, group='RYU')
-        cfg.CONF.set_override('local_ip', '10.10.10.10', group='RYU')
+        cfg.CONF.set_override('enable_tunneling', True, group='OFS')
+        cfg.CONF.set_override('local_ip', '10.10.10.10', group='OFS')
         cfgmap = self.mod_agent.create_agent_config_map(cfg.CONF)
         self.assertEqual(cfgmap['tunnel_types'], [p_const.TYPE_GRE])
 
     def test_create_agent_config_map_fails_no_local_ip(self):
         self.addCleanup(cfg.CONF.reset)
         # An ip address is required for tunneling but there is no default
-        cfg.CONF.set_override('enable_tunneling', True, group='RYU')
+        cfg.CONF.set_override('enable_tunneling', True, group='OFS')
         with testtools.ExpectedException(ValueError):
             self.mod_agent.create_agent_config_map(cfg.CONF)
 
@@ -89,7 +89,7 @@ class CreateAgentConfigMap(RyuAgentTestCase):
 
     def test_create_agent_config_map_multiple_tunnel_types(self):
         self.addCleanup(cfg.CONF.reset)
-        cfg.CONF.set_override('local_ip', '10.10.10.10', group='RYU')
+        cfg.CONF.set_override('local_ip', '10.10.10.10', group='OFS')
         cfg.CONF.set_override('tunnel_types', [p_const.TYPE_GRE,
                               p_const.TYPE_VXLAN], group='AGENT')
         cfgmap = self.mod_agent.create_agent_config_map(cfg.CONF)
@@ -97,7 +97,7 @@ class CreateAgentConfigMap(RyuAgentTestCase):
                          [p_const.TYPE_GRE, p_const.TYPE_VXLAN])
 
 
-class TestOFSNeutronAgentOVSBridge(RyuAgentTestCase):
+class TestOFSNeutronAgentOVSBridge(OFSAgentTestCase):
 
     def setUp(self):
         super(TestOFSNeutronAgentOVSBridge, self).setUp()
@@ -229,7 +229,7 @@ class TestOFSNeutronAgentOVSBridge(RyuAgentTestCase):
                 self.ovs.setup_ofp()
 
 
-class TestOFSNeutronAgent(RyuAgentTestCase):
+class TestOFSNeutronAgent(OFSAgentTestCase):
 
     def setUp(self):
         super(TestOFSNeutronAgent, self).setUp()
@@ -641,7 +641,7 @@ class TestOFSNeutronAgent(RyuAgentTestCase):
             self.assertEqual(ofport, 0)
 
 
-class AncillaryBridgesTest(RyuAgentTestCase):
+class AncillaryBridgesTest(OFSAgentTestCase):
 
     def setUp(self):
         super(AncillaryBridgesTest, self).setUp()

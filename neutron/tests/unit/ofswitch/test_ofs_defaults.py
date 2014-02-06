@@ -17,24 +17,24 @@
 
 from oslo.config import cfg
 
-from neutron.plugins.ryu.common import config  # noqa
+from neutron.plugins.ofswitch.common import config  # noqa
 from neutron.tests import base
 
 
 class ConfigurationTest(base.BaseTestCase):
     """Configuration file Tests."""
     def test_ml2_defaults(self):
-        self.assertEqual('br-int', cfg.CONF.RYU.integration_bridge)
-        self.assertFalse(cfg.CONF.RYU.enable_tunneling)
-        self.assertEqual('br-tun', cfg.CONF.RYU.tunnel_bridge)
-        self.assertEqual('patch-tun', cfg.CONF.RYU.int_peer_patch_port)
-        self.assertEqual('patch-int', cfg.CONF.RYU.tun_peer_patch_port)
-        self.assertEqual('', cfg.CONF.RYU.local_ip)
-        self.assertEqual(0, len(cfg.CONF.RYU.bridge_mappings))
-        self.assertEqual('local', cfg.CONF.RYU.tenant_network_type)
-        self.assertEqual(0, len(cfg.CONF.RYU.network_vlan_ranges))
-        self.assertEqual(0, len(cfg.CONF.RYU.tunnel_id_ranges))
-        self.assertEqual('', cfg.CONF.RYU.tunnel_type)
+        self.assertEqual('br-int', cfg.CONF.OFS.integration_bridge)
+        self.assertFalse(cfg.CONF.OFS.enable_tunneling)
+        self.assertEqual('br-tun', cfg.CONF.OFS.tunnel_bridge)
+        self.assertEqual('patch-tun', cfg.CONF.OFS.int_peer_patch_port)
+        self.assertEqual('patch-int', cfg.CONF.OFS.tun_peer_patch_port)
+        self.assertEqual('', cfg.CONF.OFS.local_ip)
+        self.assertEqual(0, len(cfg.CONF.OFS.bridge_mappings))
+        self.assertEqual('local', cfg.CONF.OFS.tenant_network_type)
+        self.assertEqual(0, len(cfg.CONF.OFS.network_vlan_ranges))
+        self.assertEqual(0, len(cfg.CONF.OFS.tunnel_id_ranges))
+        self.assertEqual('', cfg.CONF.OFS.tunnel_type)
 
         self.assertEqual(60, cfg.CONF.AGENT.get_datapath_retry_times)
         self.assertEqual(2, cfg.CONF.AGENT.polling_interval)

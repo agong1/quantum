@@ -15,11 +15,11 @@
 
 from neutron.common import constants
 from neutron.extensions import portbindings
-from neutron.plugins.ml2.drivers import mech_ryu
+from neutron.plugins.ml2.drivers import mech_ofswitch
 from neutron.tests.unit.ml2 import _test_mech_agent as base
 
 
-class RyuMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
+class OfswitchMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
     VIF_TYPE = portbindings.VIF_TYPE_OVS
     CAP_PORT_FILTER = True
     AGENT_TYPE = constants.AGENT_TYPE_OFS
@@ -44,31 +44,31 @@ class RyuMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
                    'configurations': BAD_CONFIGS}]
 
     def setUp(self):
-        super(RyuMechanismBaseTestCase, self).setUp()
-        self.driver = mech_ryu.RyuMechanismDriver()
+        super(OfswitchMechanismBaseTestCase, self).setUp()
+        self.driver = mech_ofswitch.OfswitchMechanismDriver()
         self.driver.initialize()
 
 
-class RyuMechanismGenericTestCase(RyuMechanismBaseTestCase,
-                                  base.AgentMechanismGenericTestCase):
+class OfswitchMechanismGenericTestCase(OfswitchMechanismBaseTestCase,
+                                       base.AgentMechanismGenericTestCase):
     pass
 
 
-class RyuMechanismLocalTestCase(RyuMechanismBaseTestCase,
-                                base.AgentMechanismLocalTestCase):
+class OfswitchMechanismLocalTestCase(OfswitchMechanismBaseTestCase,
+                                     base.AgentMechanismLocalTestCase):
     pass
 
 
-class RyuMechanismFlatTestCase(RyuMechanismBaseTestCase,
-                               base.AgentMechanismFlatTestCase):
+class OfswitchMechanismFlatTestCase(OfswitchMechanismBaseTestCase,
+                                    base.AgentMechanismFlatTestCase):
     pass
 
 
-class RyuMechanismVlanTestCase(RyuMechanismBaseTestCase,
-                               base.AgentMechanismVlanTestCase):
+class OfswitchMechanismVlanTestCase(OfswitchMechanismBaseTestCase,
+                                    base.AgentMechanismVlanTestCase):
     pass
 
 
-class RyuMechanismGreTestCase(RyuMechanismBaseTestCase,
-                              base.AgentMechanismGreTestCase):
+class OfswitchMechanismGreTestCase(OfswitchMechanismBaseTestCase,
+                                   base.AgentMechanismGreTestCase):
     pass

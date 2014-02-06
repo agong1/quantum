@@ -761,7 +761,7 @@ class OFSNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
         :returns: the integration bridge
         '''
         self.int_br.setup_ofp()
-        self.int_br.delete_port(cfg.CONF.RYU.int_peer_patch_port)
+        self.int_br.delete_port(cfg.CONF.OFS.int_peer_patch_port)
         msg = self.int_br.ofparser.OFPFlowMod(self.int_br.datapath,
                                               table_id=ryu_ofp13.OFPTT_ALL,
                                               command=ryu_ofp13.OFPFC_DELETE,
@@ -817,9 +817,9 @@ class OFSNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
         self.tun_br.reset_bridge()
         self.tun_br.setup_ofp()
         self.patch_tun_ofport = self.int_br.add_patch_port(
-            cfg.CONF.RYU.int_peer_patch_port, cfg.CONF.RYU.tun_peer_patch_port)
+            cfg.CONF.OFS.int_peer_patch_port, cfg.CONF.OFS.tun_peer_patch_port)
         self.patch_int_ofport = self.tun_br.add_patch_port(
-            cfg.CONF.RYU.tun_peer_patch_port, cfg.CONF.RYU.int_peer_patch_port)
+            cfg.CONF.OFS.tun_peer_patch_port, cfg.CONF.OFS.int_peer_patch_port)
         if int(self.patch_tun_ofport) < 0 or int(self.patch_int_ofport) < 0:
             LOG.error(_("Failed to create OVS patch port. Cannot have "
                         "tunneling enabled on this agent, since this version "
@@ -1408,14 +1408,14 @@ def create_agent_config_map(config):
     :returns: a map of agent configuration parameters
     """
     try:
-        bridge_mappings = q_utils.parse_mappings(config.RYU.bridge_mappings)
+        bridge_mappings = q_utils.parse_mappings(config.OFS.bridge_mappings)
     except ValueError as e:
         raise ValueError(_("Parsing bridge_mappings failed: %s.") % e)
 
     kwargs = dict(
-        integ_br=config.RYU.integration_bridge,
-        tun_br=config.RYU.tunnel_bridge,
-        local_ip=config.RYU.local_ip,
+        integ_br=config.OFS.integration_bridge,
+        tun_br=config.OFS.tunnel_bridge,
+        local_ip=config.OFS.local_ip,
         bridge_mappings=bridge_mappings,
         root_helper=config.AGENT.root_helper,
         polling_interval=config.AGENT.polling_interval,
@@ -1427,7 +1427,7 @@ def create_agent_config_map(config):
     )
 
     # If enable_tunneling is TRUE, set tunnel_type to default to GRE
-    if config.RYU.enable_tunneling and not kwargs['tunnel_types']:
+    if config.OFS.enable_tunneling and not kwargs['tunnel_types']:
         kwargs['tunnel_types'] = [p_const.TYPE_GRE]
 
     # Verify the tunnel_types specified are valid
