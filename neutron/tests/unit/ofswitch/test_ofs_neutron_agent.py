@@ -187,6 +187,7 @@ class TestOFSNeutronAgentOVSBridge(OFSAgentTestCase):
             mock.patch.object(self.ovs, 'get_datapath'),
         ) as (mock_set_protocols, mock_set_controller,
               mock_find_datapath_id, mock_get_datapath):
+            cfg.CONF.ofp_listen_host = ''
             self.ovs.setup_ofp()
         mock_set_protocols.assert_called_with('OpenFlow13')
         mock_set_controller.assert_called_with(['tcp:127.0.0.1:6633'])
@@ -222,6 +223,7 @@ class TestOFSNeutronAgentOVSBridge(OFSAgentTestCase):
         ) as (mock_exit, mock_set_protocols, mock_set_controller,
               mock_find_datapath_id, mock_get_datapath):
             with testtools.ExpectedException(Exception):
+                cfg.CONF.ofp_listen_host = ''
                 self.ovs.setup_ofp()
 
 
