@@ -1050,8 +1050,7 @@ class OFSNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
                                               instructions=instructions)
         self.ryu_send_msg(msg)
 
-        ofports = [int(ofport) for ofport in
-                   self.tun_br_ofports[tunnel_type].values()]
+        ofports = [int(p) for p in self.tun_br_ofports[tunnel_type].values()]
         if ofports:
             # Update flooding flows to include the new tunnel
             for network_id, vlan_mapping in self.local_vlan_map.iteritems():
@@ -1063,9 +1062,9 @@ class OFSNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
                         self.tun_br.ofparser.OFPActionPopVlan(),
                         self.tun_br.ofparser.OFPActionSetField(
                             tunnel_id=int(vlan_mapping.segmentation_id))]
-                    for ofport in ofports:
+                    for p in ofports:
                         actions.append(
-                            self.tun_br.ofparser.OFPActionOutput(ofport, 0))
+                            self.tun_br.ofparser.OFPActionOutput(p, 0))
                     instructions = [
                         self.tun_br.ofparser.OFPInstructionActions(
                             ryu_ofp13.OFPIT_APPLY_ACTIONS,
