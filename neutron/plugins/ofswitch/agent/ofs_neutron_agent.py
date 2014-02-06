@@ -747,7 +747,7 @@ class OFSNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
         '''
         self.int_br.set_db_attribute("Port", port.port_name, "tag",
                                      DEAD_VLAN_TAG)
-        match = self.tun_br.ofparser.OFPMatch(in_port=int(port.ofport))
+        match = self.int_br.ofparser.OFPMatch(in_port=int(port.ofport))
         msg = self.int_br.ofparser.OFPFlowMod(self.int_br.datapath,
                                               priority=2, match=match)
         self.ryu_send_msg(msg)
