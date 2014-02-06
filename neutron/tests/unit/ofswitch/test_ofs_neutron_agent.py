@@ -22,9 +22,7 @@ from oslo.config import cfg
 import testtools
 
 from neutron.agent.linux import ip_lib
-from neutron.agent.linux import ovs_lib
 from neutron.agent.linux import utils
-from neutron.common import constants as n_const
 from neutron.openstack.common import importutils
 from neutron.openstack.common.rpc import common as rpc_common
 from neutron.plugins.common import constants as p_const
@@ -142,7 +140,7 @@ class TestOFSNeutronAgentOVSBridge(OFSAgentTestCase):
 
     def test_find_datapath_id(self):
         with mock.patch.object(self.ovs, 'get_datapath_id',
-                               return_value='12345') as mock_get_datapath_id:
+                               return_value='12345'):
             self.ovs.find_datapath_id()
         self.assertEqual(self.ovs.datapath_id, '12345')
 
@@ -156,10 +154,8 @@ class TestOFSNeutronAgentOVSBridge(OFSAgentTestCase):
 
     def test_get_datapath_normal(self):
         self.ovs.retry_count = 0
-        with mock.patch.object(
-            self.mod_agent.ryu_api, 'get_datapath',
-            new=self._fake_get_datapath
-        ) as mock_get_datapath:
+        with mock.patch.object(self.mod_agent.ryu_api, 'get_datapath',
+                               new=self._fake_get_datapath):
             self.ovs.datapath_id = '0x64'
             self.ovs.get_datapath(retry_max=4)
         self.assertEqual(self.ovs.retry_count, 2)

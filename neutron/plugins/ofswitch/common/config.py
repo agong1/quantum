@@ -18,8 +18,8 @@ from oslo.config import cfg
 
 from neutron.agent.common import config
 from neutron.agent.linux import ovs_lib  # noqa
-from neutron.plugins.openvswitch.common import constants as ovs_constants
 from neutron.plugins.ofswitch.common import constants
+from neutron.plugins.openvswitch.common import constants as ovs_constants
 
 
 DEFAULT_BRIDGE_MAPPINGS = []
