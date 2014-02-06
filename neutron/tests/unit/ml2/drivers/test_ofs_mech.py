@@ -22,7 +22,7 @@ from neutron.tests.unit.ml2 import _test_mech_agent as base
 class RyuMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
     VIF_TYPE = portbindings.VIF_TYPE_OVS
     CAP_PORT_FILTER = True
-    AGENT_TYPE = constants.AGENT_TYPE_RYU
+    AGENT_TYPE = constants.AGENT_TYPE_OFS
 
     GOOD_MAPPINGS = {'fake_physical_network': 'fake_bridge'}
     GOOD_TUNNEL_TYPES = ['gre', 'vxlan']

@@ -32,7 +32,7 @@ VETH_INTEGRATION_PREFIX = 'int-'
 VETH_PHYSICAL_PREFIX = 'phy-'
 
 # The minimum version of OVS which supports VXLAN tunneling
-MINIMUM_RYU_VXLAN_VERSION = "1.10"
+MINIMUM_OFS_VXLAN_VERSION = "1.10"
 
 # The different types of tunnels
 TUNNEL_NETWORK_TYPES = [p_const.TYPE_GRE, p_const.TYPE_VXLAN]
@@ -49,4 +49,4 @@ TUN_TABLE = {p_const.TYPE_GRE: GRE_TUN_TO_LV,
              p_const.TYPE_VXLAN: VXLAN_TUN_TO_LV}
 
 # The default respawn interval for the ovsdb monitor
-DEFAULT_RYUDBMON_RESPAWN = 30
+DEFAULT_OFSDBMON_RESPAWN = 30

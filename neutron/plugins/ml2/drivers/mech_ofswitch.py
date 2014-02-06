@@ -27,19 +27,19 @@ from neutron.plugins.ml2.drivers import mech_agent
 LOG = log.getLogger(__name__)
 
 
-class RyuMechanismDriver(mech_agent.AgentMechanismDriverBase):
-    """Attach to networks using ryu L2 agent.
+class OfswitchMechanismDriver(mech_agent.AgentMechanismDriverBase):
+    """Attach to networks using ofswitch L2 agent.
 
-    The RyuMechanismDriver integrates the ml2 plugin with the
-    ryu L2 agent. Port binding with this driver requires the
-    ryu agent to be running on the port's host, and that agent
+    The OfswitchMechanismDriver integrates the ml2 plugin with the
+    ofswitch L2 agent. Port binding with this driver requires the
+    ofswitch agent to be running on the port's host, and that agent
     to have connectivity to at least one segment of the port's
     network.
     """
 
     def __init__(self):
-        super(RyuMechanismDriver, self).__init__(
-            constants.AGENT_TYPE_RYU,
+        super(OfswitchMechanismDriver, self).__init__(
+            constants.AGENT_TYPE_OFS,
             portbindings.VIF_TYPE_OVS,
             True)
 

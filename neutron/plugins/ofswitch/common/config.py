@@ -19,7 +19,7 @@ from oslo.config import cfg
 from neutron.agent.common import config
 from neutron.agent.linux import ovs_lib  # noqa
 from neutron.plugins.openvswitch.common import constants as ovs_constants
-from neutron.plugins.ryu.common import constants
+from neutron.plugins.ofswitch.common import constants
 
 
 DEFAULT_BRIDGE_MAPPINGS = []
@@ -27,7 +27,7 @@ DEFAULT_VLAN_RANGES = []
 DEFAULT_TUNNEL_RANGES = []
 DEFAULT_TUNNEL_TYPES = []
 
-ryu_opts = [
+ofs_opts = [
     cfg.StrOpt('integration_bridge', default='br-int',
                help=_("Integration bridge to use")),
     cfg.BoolOpt('enable_tunneling', default=False,
@@ -72,7 +72,7 @@ agent_opts = [
                 help=_("Minimize polling by monitoring ovsdb for interface "
                        "changes.")),
     cfg.IntOpt('ovsdb_monitor_respawn_interval',
-               default=constants.DEFAULT_RYUDBMON_RESPAWN,
+               default=constants.DEFAULT_OFSDBMON_RESPAWN,
                help=_("The number of seconds to wait before respawning the "
                       "ovsdb monitor after losing communication with it")),
     cfg.ListOpt('tunnel_types', default=DEFAULT_TUNNEL_TYPES,
@@ -88,7 +88,7 @@ agent_opts = [
 ]
 
 
-cfg.CONF.register_opts(ryu_opts, "RYU")
+cfg.CONF.register_opts(ofs_opts, "OFS")
 cfg.CONF.register_opts(agent_opts, "AGENT")
 config.register_agent_state_opts_helper(cfg.CONF)
 config.register_root_helper(cfg.CONF)

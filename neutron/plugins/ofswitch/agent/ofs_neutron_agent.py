@@ -43,8 +43,8 @@ from neutron.openstack.common import loopingcall
 from neutron.openstack.common.rpc import common as rpc_common
 from neutron.openstack.common.rpc import dispatcher
 from neutron.plugins.common import constants as p_const
-from neutron.plugins.ryu.common import config_ml2  # noqa
-from neutron.plugins.ryu.common import constants
+from neutron.plugins.ofswitch.common import config  # noqa
+from neutron.plugins.ofswitch.common import constants
 
 from ryu.app.ofctl import api as ryu_api
 from ryu.base import app_manager
@@ -170,12 +170,12 @@ class OVSBridge(ovs_lib.OVSBridge):
         self.get_datapath(retry_max)
 
 
-class RyuPluginApi(agent_rpc.PluginApi,
+class OFSPluginApi(agent_rpc.PluginApi,
                    sg_rpc.SecurityGroupServerRpcApiMixin):
     pass
 
 
-class RyuSecurityGroupAgent(sg_rpc.SecurityGroupAgentRpcMixin):
+class OFSSecurityGroupAgent(sg_rpc.SecurityGroupAgentRpcMixin):
     def __init__(self, context, plugin_rpc, root_helper):
         self.context = context
         self.plugin_rpc = plugin_rpc
@@ -183,13 +183,13 @@ class RyuSecurityGroupAgent(sg_rpc.SecurityGroupAgentRpcMixin):
         self.init_firewall()
 
 
-class RyuNeutronAgentApp(app_manager.RyuApp):
+class OFSNeutronAgentRyuApp(app_manager.RyuApp):
     OFP_VERSIONS = [ryu_ofp13.OFP_VERSION]
 
     def start(self):
         global RYUAPP_INST
 
-        super(RyuNeutronAgentApp, self).start()
+        super(OFSNeutronAgentRyuApp, self).start()
         RYUAPP_INST = self
         return hub.spawn(self._agent_main)
 
@@ -209,7 +209,7 @@ class RyuNeutronAgentApp(app_manager.RyuApp):
             # commands target xen dom0 rather than domU.
             cfg.CONF.set_default('ip_lib_force_root', True)
 
-        agent = RyuNeutronAgent(**agent_config)
+        agent = OFSNeutronAgent(**agent_config)
 
         # Start everything.
         LOG.info(_("Agent initialized successfully, now running... "))
@@ -217,10 +217,10 @@ class RyuNeutronAgentApp(app_manager.RyuApp):
         sys.exit(0)
 
 
-class RyuNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
-    '''Ryu agent for ML2.
+class OFSNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
+    '''A agent for OpenFlow Switch ML2 mechanism driver.
 
-    RyuNeutronAgent is a Ryu agent for a ML2 plugin.
+    OFSNeutronAgent is a OpenFlow Switch agent for a ML2 plugin.
     This is as a ryu application thread.
     '''
 
@@ -235,7 +235,7 @@ class RyuNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
                  veth_mtu=None, l2_population=False,
                  minimize_polling=False,
                  ovsdb_monitor_respawn_interval=(
-                     constants.DEFAULT_RYUDBMON_RESPAWN)):
+                     constants.DEFAULT_OFSDBMON_RESPAWN)):
         '''Constructor.
 
         :param integ_br: name of the integration bridge.
@@ -261,14 +261,14 @@ class RyuNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
         self.tunnel_types = tunnel_types or []
         self.l2_pop = l2_population
         self.agent_state = {
-            'binary': 'neutron-ryu-ml2-agent',
+            'binary': 'neutron-ofs-agent',
             'host': cfg.CONF.host,
             'topic': q_const.L2_AGENT_TOPIC,
             'configurations': {'bridge_mappings': bridge_mappings,
                                'tunnel_types': self.tunnel_types,
                                'tunneling_ip': local_ip,
                                'l2_population': self.l2_pop},
-            'agent_type': q_const.AGENT_TYPE_RYU,
+            'agent_type': q_const.AGENT_TYPE_OFS,
             'start_flag': True}
 
         # Keep track of int_br's device count for use by _report_state()
@@ -300,7 +300,7 @@ class RyuNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
         self.ancillary_brs = self.setup_ancillary_bridges(integ_br, tun_br)
 
         # Security group agent support
-        self.sg_agent = RyuSecurityGroupAgent(self.context,
+        self.sg_agent = OFSSecurityGroupAgent(self.context,
                                               self.plugin_rpc,
                                               self.root_helper)
         # Initialize iteration counter
@@ -308,7 +308,7 @@ class RyuNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
 
     def _check_ovs_version(self):
         if p_const.TYPE_VXLAN in self.tunnel_types:
-            check_ovs_version(constants.MINIMUM_RYU_VXLAN_VERSION,
+            check_ovs_version(constants.MINIMUM_OFS_VXLAN_VERSION,
                               self.root_helper)
 
     def _report_state(self):
@@ -330,7 +330,7 @@ class RyuNeutronAgent(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
         mac = self.int_br.get_local_port_mac()
         self.agent_id = '%s%s' % ('ovs', (mac.replace(":", "")))
         self.topic = topics.AGENT
-        self.plugin_rpc = RyuPluginApi(topics.PLUGIN)
+        self.plugin_rpc = OFSPluginApi(topics.PLUGIN)
         self.state_rpc = agent_rpc.PluginReportStateAPI(topics.PLUGIN)
 
         # RPC network init
@@ -1423,7 +1423,7 @@ def create_agent_config_map(config):
         tunnel_types=config.AGENT.tunnel_types,
         veth_mtu=config.AGENT.veth_mtu,
         l2_population=False,
-        ovsdb_monitor_respawn_interval=constants.DEFAULT_RYUDBMON_RESPAWN,
+        ovsdb_monitor_respawn_interval=constants.DEFAULT_OFSDBMON_RESPAWN,
     )
 
     # If enable_tunneling is TRUE, set tunnel_type to default to GRE

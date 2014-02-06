@@ -97,10 +97,10 @@ class CreateAgentConfigMap(RyuAgentTestCase):
                          [p_const.TYPE_GRE, p_const.TYPE_VXLAN])
 
 
-class TestRyuNeutronAgentOVSBridge(RyuAgentTestCase):
+class TestOFSNeutronAgentOVSBridge(RyuAgentTestCase):
 
     def setUp(self):
-        super(TestRyuNeutronAgentOVSBridge, self).setUp()
+        super(TestOFSNeutronAgentOVSBridge, self).setUp()
         self.br_name = 'bridge1'
         self.root_helper = 'sudo'
         self.ovs = self.mod_agent.OVSBridge(self.br_name, self.root_helper)
@@ -229,10 +229,10 @@ class TestRyuNeutronAgentOVSBridge(RyuAgentTestCase):
                 self.ovs.setup_ofp()
 
 
-class TestRyuNeutronAgent(RyuAgentTestCase):
+class TestOFSNeutronAgent(RyuAgentTestCase):
 
     def setUp(self):
-        super(TestRyuNeutronAgent, self).setUp()
+        super(TestOFSNeutronAgent, self).setUp()
         self.addCleanup(cfg.CONF.reset)
         self.addCleanup(mock.patch.stopall)
         notifier_p = mock.patch(NOTIFIER)
@@ -252,10 +252,10 @@ class TestRyuNeutronAgent(RyuAgentTestCase):
                 self.f()
 
         with contextlib.nested(
-            mock.patch.object(self.mod_agent.RyuNeutronAgent,
+            mock.patch.object(self.mod_agent.OFSNeutronAgent,
                               'setup_integration_br',
                               return_value=mock.Mock()),
-            mock.patch.object(self.mod_agent.RyuNeutronAgent,
+            mock.patch.object(self.mod_agent.OFSNeutronAgent,
                               'setup_ancillary_bridges',
                               return_value=[]),
             mock.patch.object(self.mod_agent.OVSBridge,
@@ -266,7 +266,7 @@ class TestRyuNeutronAgent(RyuAgentTestCase):
             mock.patch('neutron.openstack.common.loopingcall.'
                        'FixedIntervalLoopingCall',
                        new=MockFixedIntervalLoopingCall)):
-            self.agent = self.mod_agent.RyuNeutronAgent(**kwargs)
+            self.agent = self.mod_agent.OFSNeutronAgent(**kwargs)
             self.agent.tun_br = mock.Mock()
             self.datapath = mock.Mock()
             self.ofparser = mock.Mock()
@@ -571,27 +571,27 @@ class TestRyuNeutronAgent(RyuAgentTestCase):
 
     def test_check_minimum_version(self):
         self._check_ovs_vxlan_version('1.10', '1.10',
-                                      constants.MINIMUM_RYU_VXLAN_VERSION,
+                                      constants.MINIMUM_OFS_VXLAN_VERSION,
                                       expecting_ok=True)
 
     def test_check_future_version(self):
         self._check_ovs_vxlan_version('1.11', '1.11',
-                                      constants.MINIMUM_RYU_VXLAN_VERSION,
+                                      constants.MINIMUM_OFS_VXLAN_VERSION,
                                       expecting_ok=True)
 
     def test_check_fail_version(self):
         self._check_ovs_vxlan_version('1.9', '1.9',
-                                      constants.MINIMUM_RYU_VXLAN_VERSION,
+                                      constants.MINIMUM_OFS_VXLAN_VERSION,
                                       expecting_ok=False)
 
     def test_check_fail_no_version(self):
         self._check_ovs_vxlan_version(None, None,
-                                      constants.MINIMUM_RYU_VXLAN_VERSION,
+                                      constants.MINIMUM_OFS_VXLAN_VERSION,
                                       expecting_ok=False)
 
     def test_check_fail_klm_version(self):
         self._check_ovs_vxlan_version('1.10', '1.9',
-                                      constants.MINIMUM_RYU_VXLAN_VERSION,
+                                      constants.MINIMUM_OFS_VXLAN_VERSION,
                                       expecting_ok=False)
 
     def test_daemon_loop_uses_polling_manager(self):
@@ -601,7 +601,7 @@ class TestRyuNeutronAgent(RyuAgentTestCase):
             with mock.patch.object(self.agent, 'rpc_loop') as mock_loop:
                 self.agent.daemon_loop()
         mock_get_pm.assert_called_with(True, 'sudo',
-                                       constants.DEFAULT_RYUDBMON_RESPAWN)
+                                       constants.DEFAULT_OFSDBMON_RESPAWN)
         mock_loop.called_once()
 
     def test_setup_tunnel_port_error_negative(self):
@@ -665,7 +665,7 @@ class AncillaryBridgesTest(RyuAgentTestCase):
             return result
 
         with contextlib.nested(
-            mock.patch.object(self.mod_agent.RyuNeutronAgent,
+            mock.patch.object(self.mod_agent.OFSNeutronAgent,
                               'setup_integration_br',
                               return_value=mock.Mock()),
             mock.patch('neutron.agent.linux.utils.get_interface_mac',
@@ -678,7 +678,7 @@ class AncillaryBridgesTest(RyuAgentTestCase):
             mock.patch(
                 'neutron.agent.linux.ovs_lib.get_bridge_external_bridge_id',
                 side_effect=pullup_side_effect)):
-            self.agent = self.mod_agent.RyuNeutronAgent(**self.kwargs)
+            self.agent = self.mod_agent.OFSNeutronAgent(**self.kwargs)
             self.assertEqual(len(ancillary), len(self.agent.ancillary_brs))
             if ancillary:
                 bridges = [br.br_name for br in self.agent.ancillary_brs]

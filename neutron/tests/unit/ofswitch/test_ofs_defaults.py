@@ -17,7 +17,7 @@
 
 from oslo.config import cfg
 
-from neutron.plugins.ryu.common import config_ml2  # noqa
+from neutron.plugins.ryu.common import config  # noqa
 from neutron.tests import base
 
 
